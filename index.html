@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wooden Puzzle Box</title>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wood-dark:    #3d1f0a;
+    --wood-mid:     #6b3a1f;
+    --wood-light:   #a0622a;
+    --wood-grain:   #8b5320;
+    --wood-surface: #c4843e;
+    --wood-felt:    #1a3a2a;
+    --felt-light:   #245238;
+    --gold:         #d4a44c;
+    --gold-light:   #f0c96a;
+    --cream:        #f5e8c8;
+    --shadow:       rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--wood-dark);
+    font-family: 'Crimson Pro', serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Wood grain background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        88deg,
+        transparent 0px,
+        rgba(255,255,255,0.015) 1px,
+        transparent 2px,
+        transparent 18px
+      ),
+      repeating-linear-gradient(
+        92deg,
+        transparent 0px,
+        rgba(0,0,0,0.04) 1px,
+        transparent 3px,
+        transparent 22px
+      ),
+      linear-gradient(160deg, #3d1f0a 0%, #5c2d12 30%, #3d1f0a 60%, #4a2510 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .scene {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  /* Title plaque */
+  .title-plaque {
+    background: linear-gradient(145deg, #b8732a, #8b5320, #c4843e, #7a4518);
+    border: 4px solid var(--wood-dark);
+    border-radius: 8px;
+    padding: 10px 40px;
+    text-align: center;
+    box-shadow:
+      0 4px 0 var(--wood-dark),
+      0 6px 12px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 -1px 0 rgba(0,0,0,0.3);
+    position: relative;
+  }
+  .title-plaque::before,
+  .title-plaque::after {
+    content: '✦';
+    position: absolute;
+    color: var(--gold);
+    font-size: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .title-plaque::before { left: 12px; }
+  .title-plaque::after  { right: 12px; }
+
+  h1 {
+    font-family: 'Rye', serif;
+    font-size: 28px;
+    color: var(--gold-light);
+    text-shadow: 1px 2px 4px rgba(0,0,0,0.7), 0 0 20px rgba(212,164,76,0.2);
+    letter-spacing: 2px;
+  }
+
+  /* Wooden box container */
+  .box-outer {
+    position: relative;
+    padding: 20px;
+    background: linear-gradient(145deg, #7a4518, #5c2d12, #8b5320, #6b3a1f);
+    border-radius: 12px;
+    box-shadow:
+      0 0 0 3px #2a1005,
+      0 8px 0 #2a1005,
+      0 12px 30px rgba(0,0,0,0.8),
+      inset 0 2px 0 rgba(255,255,255,0.12),
+      inset 0 -2px 0 rgba(0,0,0,0.4),
+      inset 4px 0 8px rgba(0,0,0,0.2),
+      inset -4px 0 8px rgba(0,0,0,0.2);
+  }
+
+  /* Corner nails */
+  .box-outer::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 2px solid rgba(0,0,0,0.25);
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  .corner-nail {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: radial-gradient(circle at 35% 35%, #d4a44c, #7a6020);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+    z-index: 2;
+  }
+  .cn-tl { top: 8px; left: 8px; }
+  .cn-tr { top: 8px; right: 8px; }
+  .cn-bl { bottom: 8px; left: 8px; }
+  .cn-br { bottom: 8px; right: 8px; }
+
+  /* Felt-lined inner tray */
+  .board {
+    width: 420px;
+    height: 420px;
+    background:
+      repeating-linear-gradient(
+        45deg,
+        rgba(0,0,0,0.03) 0px,
+        rgba(0,0,0,0.03) 1px,
+        transparent 1px,
+        transparent 8px
+      ),
+      linear-gradient(135deg, #1a3a2a, #245238, #1a3a2a);
+    border-radius: 4px;
+    box-shadow:
+      inset 0 3px 10px rgba(0,0,0,0.7),
+      inset 0 0 20px rgba(0,0,0,0.4);
+    position: relative;
+    display: grid;
+    gap: 3px;
+  }
+
+  /* Start screen overlay */
+  .start-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 20, 15, 0.88);
+    border-radius: 4px;
+    z-index: 10;
+    gap: 16px;
+    backdrop-filter: blur(2px);
+  }
+  .start-screen p {
+    color: var(--cream);
+    font-size: 18px;
+    font-style: italic;
+    text-align: center;
+    padding: 0 20px;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+
+  /* Win screen */
+  .win-screen {
+    display: none;
+    position: absolute;
+    inset: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 20, 15, 0.85);
+    border-radius: 4px;
+    z-index: 10;
+    gap: 12px;
+    backdrop-filter: blur(3px);
+  }
+  .win-screen.show { display: flex; }
+
+  .win-screen h2 {
+    font-family: 'Rye', serif;
+    color: var(--gold-light);
+    font-size: 32px;
+    text-shadow: 0 0 20px rgba(212,164,76,0.5);
+  }
+  .win-screen p {
+    color: var(--cream);
+    font-size: 18px;
+    font-style: italic;
+  }
+
+  /* Tiles */
+  .tile {
+    background-size: 420px 420px;
+    cursor: grab;
+    border-radius: 3px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 -1px 0 rgba(0,0,0,0.3),
+      1px 1px 3px rgba(0,0,0,0.4);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    position: relative;
+    user-select: none;
+  }
+  .tile:active, .tile.dragging {
+    cursor: grabbing;
+    transform: scale(1.06) rotate(-1deg);
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+    z-index: 100;
+  }
+  .tile.correct {
+    box-shadow:
+      0 0 0 2px var(--gold),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+    cursor: default;
+    pointer-events: none;
+  }
+  .tile.correct::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(212,164,76,0.08);
+    border-radius: 2px;
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'Rye', serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--cream);
+    background: linear-gradient(145deg, #8b5320, #6b3a1f, #a0622a);
+    border: 2px solid var(--wood-dark);
+    border-radius: 6px;
+    padding: 10px 28px;
+    cursor: pointer;
+    box-shadow:
+      0 4px 0 var(--wood-dark),
+      0 6px 10px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    position: relative;
+  }
+  .btn:hover {
+    background: linear-gradient(145deg, #a0622a, #8b5320, #b8732a);
+    color: var(--gold-light);
+  }
+  .btn:active {
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 var(--wood-dark),
+      0 2px 5px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .btn-start-big {
+    font-size: 18px;
+    padding: 14px 44px;
+    background: linear-gradient(145deg, #c4843e, #a0622a, #d4944e);
+    color: var(--gold-light);
+    box-shadow:
+      0 5px 0 var(--wood-dark),
+      0 8px 16px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  /* Difficulty selector */
+  .diff-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .diff-row label {
+    font-family: 'Rye', serif;
+    color: var(--gold);
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+  .diff-btn {
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cream);
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(212,164,76,0.3);
+    border-radius: 4px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .diff-btn:hover, .diff-btn.active {
+    background: rgba(212,164,76,0.2);
+    border-color: var(--gold);
+    color: var(--gold-light);
+  }
+
+  /* Move counter */
+  .stats {
+    display: flex;
+    gap: 24px;
+    color: var(--cream);
+    font-size: 15px;
+    opacity: 0.8;
+  }
+  .stats span { font-weight: 600; color: var(--gold-light); }
+
+  /* Shimmer on win */
+  @keyframes shimmer {
+    0%   { opacity: 0.7; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.7; }
+  }
+  .win-screen h2 { animation: shimmer 2s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<div class="scene">
+  <div class="title-plaque">
+    <h1>Wooden Puzzle Box</h1>
+  </div>
+
+  <div class="btn-row" id="topBar" style="display:none">
+    <div class="stats">Moves: <span id="moveCount">0</span></div>
+    <button class="btn" onclick="restartGame()">↺ Restart</button>
+  </div>
+
+  <div class="box-outer">
+    <div class="corner-nail cn-tl"></div>
+    <div class="corner-nail cn-tr"></div>
+    <div class="corner-nail cn-bl"></div>
+    <div class="corner-nail cn-br"></div>
+
+    <div class="board" id="board">
+      <!-- Start screen -->
+      <div class="start-screen" id="startScreen">
+        <p>Reassemble the scrambled image<br>by dragging the tiles into place.</p>
+        <div class="diff-row">
+          <label>Size:</label>
+          <button class="diff-btn active" onclick="setDiff(3,this)">3 × 3</button>
+          <button class="diff-btn" onclick="setDiff(4,this)">4 × 4</button>
+          <button class="diff-btn" onclick="setDiff(5,this)">5 × 5</button>
+        </div>
+        <button class="btn btn-start-big" onclick="startGame()">▶ Begin Puzzle</button>
+      </div>
+
+      <!-- Win screen -->
+      <div class="win-screen" id="winScreen">
+        <h2>Puzzle Complete!</h2>
+        <p id="winMsg"></p>
+        <button class="btn btn-start-big" onclick="restartGame()" style="margin-top:8px">▶ Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Images (scenic photos via picsum with fixed seeds) ──────────────────────
+const IMAGES = [
+  'https://picsum.photos/id/1/420/420',
+  'https://picsum.photos/id/10/420/420',
+  'https://picsum.photos/id/11/420/420',
+  'https://picsum.photos/id/15/420/420',
+  'https://picsum.photos/id/19/420/420',
+  'https://picsum.photos/id/23/420/420',
+  'https://picsum.photos/id/26/420/420',
+  'https://picsum.photos/id/28/420/420',
+  'https://picsum.photos/id/40/420/420',
+];
+
+let gridSize   = 3;
+let moves      = 0;
+let dragSrc    = null;
+let tiles      = [];   // array of tile elements in DOM order (by grid position)
+let order      = [];   // order[i] = which image-piece index is at grid slot i
+let correctMap = [];   // tracks which slots are locked in
+let currentImg = '';
+let gameActive = false;
+
+// ── Difficulty ──────────────────────────────────────────────────────────────
+function setDiff(n, btn) {
+  gridSize = n;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Start ───────────────────────────────────────────────────────────────────
+function startGame() {
+  moves = 0;
+  gameActive = true;
+  currentImg = IMAGES[Math.floor(Math.random() * IMAGES.length)];
+
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('winScreen').classList.remove('show');
+  document.getElementById('topBar').style.display = 'flex';
+  document.getElementById('moveCount').textContent = '0';
+
+  buildBoard();
+}
+
+function restartGame() {
+  startGame();
+}
+
+// ── Build & Shuffle ──────────────────────────────────────────────────────────
+function buildBoard() {
+  const board = document.getElementById('board');
+  // Clear old tiles (keep screens)
+  tiles.forEach(t => t.remove());
+  tiles = [];
+  correctMap = [];
+
+  const n    = gridSize;
+  const total = n * n;
+  const size  = Math.floor(420 / n);  // tile px size
+
+  board.style.gridTemplateColumns = `repeat(${n}, ${size}px)`;
+  board.style.gridTemplateRows    = `repeat(${n}, ${size}px)`;
+
+  // Create shuffled order
+  order = shuffle([...Array(total).keys()]);
+
+  for (let slot = 0; slot < total; slot++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.draggable = true;
+    tile.dataset.slot = slot;
+
+    const pieceIdx = order[slot];
+    setTileBackground(tile, pieceIdx, n, size);
+
+    tile.addEventListener('dragstart', onDragStart);
+    tile.addEventListener('dragover',  onDragOver);
+    tile.addEventListener('drop',      onDrop);
+    tile.addEventListener('dragend',   onDragEnd);
+
+    board.appendChild(tile);
+    tiles.push(tile);
+    correctMap.push(false);
+  }
+}
+
+function setTileBackground(tile, pieceIdx, n, size) {
+  const col = pieceIdx % n;
+  const row = Math.floor(pieceIdx / n);
+  tile.style.backgroundImage    = `url('${currentImg}')`;
+  tile.style.backgroundSize     = `${n * size}px ${n * size}px`;
+  tile.style.backgroundPosition = `-${col * size}px -${row * size}px`;
+  tile.style.width  = size + 'px';
+  tile.style.height = size + 'px';
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  // Ensure not already solved
+  const solved = arr.every((v, i) => v === i);
+  if (solved) { [arr[0], arr[1]] = [arr[1], arr[0]]; }
+  return arr;
+}
+
+// ── Drag & Drop ──────────────────────────────────────────────────────────────
+function onDragStart(e) {
+  dragSrc = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  if (!dragSrc || dragSrc === this) return;
+
+  const srcSlot  = parseInt(dragSrc.dataset.slot);
+  const destSlot = parseInt(this.dataset.slot);
+
+  // Swap in order array
+  [order[srcSlot], order[destSlot]] = [order[destSlot], order[srcSlot]];
+
+  // Swap backgrounds visually
+  const n    = gridSize;
+  const size = Math.floor(420 / n);
+  setTileBackground(dragSrc, order[srcSlot], n, size);
+  setTileBackground(this,    order[destSlot], n, size);
+
+  moves++;
+  document.getElementById('moveCount').textContent = moves;
+
+  checkCorrect(srcSlot);
+  checkCorrect(destSlot);
+  checkWin();
+}
+
+function onDragEnd() {
+  this.classList.remove('dragging');
+  dragSrc = null;
+}
+
+// ── Validation ───────────────────────────────────────────────────────────────
+function checkCorrect(slot) {
+  if (order[slot] === slot) {
+    tiles[slot].classList.add('correct');
+    correctMap[slot] = true;
+  } else {
+    tiles[slot].classList.remove('correct');
+    correctMap[slot] = false;
+  }
+}
+
+function checkWin() {
+  const won = order.every((v, i) => v === i);
+  if (won) {
+    gameActive = false;
+    setTimeout(() => {
+      document.getElementById('winMsg').textContent =
+        `Solved in ${moves} move${moves !== 1 ? 's' : ''}!`;
+      document.getElementById('winScreen').classList.add('show');
+    }, 300);
+  }
+}
+</script>
+</body>
+</html>
