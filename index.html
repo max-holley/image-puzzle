@@ -561,5 +561,90 @@ function checkWin() {
   }
 }
 </script>
+<script>
+// ── Touch support ────────────────────────────────────────────────────────────
+(function () {
+  let touchSrc = null;
+  let ghost    = null;
+
+  function tileFromPoint(x, y) {
+    // Temporarily hide the ghost so elementFromPoint can see tiles beneath it
+    if (ghost) ghost.style.display = 'none';
+    const el = document.elementFromPoint(x, y);
+    if (ghost) ghost.style.display = 'block';
+    return el && el.classList.contains('tile') ? el : null;
+  }
+
+  document.addEventListener('touchstart', function (e) {
+    const tile = e.target.closest('.tile');
+    if (!tile || tile.classList.contains('correct')) return;
+    e.preventDefault();
+
+    touchSrc = tile;
+    touchSrc.classList.add('dragging');
+
+    // Create a floating ghost clone that follows the finger
+    const rect = tile.getBoundingClientRect();
+    ghost = tile.cloneNode(false);
+    ghost.style.cssText = `
+      position: fixed;
+      width:  ${rect.width}px;
+      height: ${rect.height}px;
+      left:   ${rect.left}px;
+      top:    ${rect.top}px;
+      opacity: 0.85;
+      pointer-events: none;
+      z-index: 999;
+      transform: scale(1.08) rotate(-1deg);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.7);
+      border-radius: 3px;
+      background-image:  ${tile.style.backgroundImage};
+      background-size:   ${tile.style.backgroundSize};
+      background-position: ${tile.style.backgroundPosition};
+    `;
+    document.body.appendChild(ghost);
+  }, { passive: false });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!touchSrc) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const rect = ghost.getBoundingClientRect();
+    ghost.style.left = (t.clientX - rect.width  / 2) + 'px';
+    ghost.style.top  = (t.clientY - rect.height / 2) + 'px';
+  }, { passive: false });
+
+  document.addEventListener('touchend', function (e) {
+    if (!touchSrc) return;
+    const t = e.changedTouches[0];
+    const destTile = tileFromPoint(t.clientX, t.clientY);
+
+    if (destTile && destTile !== touchSrc && !destTile.classList.contains('correct')) {
+      // Reuse the existing swap logic by reading/writing order[] directly
+      const srcSlot  = parseInt(touchSrc.dataset.slot);
+      const destSlot = parseInt(destTile.dataset.slot);
+
+      [order[srcSlot], order[destSlot]] = [order[destSlot], order[srcSlot]];
+
+      const n    = gridSize;
+      const size = Math.floor(420 / n);
+      setTileBackground(touchSrc, order[srcSlot],  n, size);
+      setTileBackground(destTile, order[destSlot], n, size);
+
+      moves++;
+      document.getElementById('moveCount').textContent = moves;
+
+      checkCorrect(srcSlot);
+      checkCorrect(destSlot);
+      checkWin();
+    }
+
+    touchSrc.classList.remove('dragging');
+    ghost.remove();
+    ghost    = null;
+    touchSrc = null;
+  }, { passive: false });
+})();
+</script>
 </body>
 </html>
